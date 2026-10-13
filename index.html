@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>♥SYSE 영상 모음♥</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--tx:#1c1c1a;--sub:#6b6b66;--bd:#e4e4df;--ac:#d92d20;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#212120;--tx:#f0f0ec;--sub:#a0a09a;--bd:#33332f}}
+:root[data-theme="dark"]{--bg:#161615;--card:#212120;--tx:#f0f0ec;--sub:#a0a09a;--bd:#33332f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif}
+header,main{max-width:760px;margin:0 auto;padding-left:20px;padding-right:20px}
+header{padding-top:28px;padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:1.5rem}
+.sub{color:var(--sub);font-size:.9rem;margin-top:4px}
+main{padding-top:12px;padding-bottom:48px}
+ol{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--bd);border-radius:14px}
+li{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bd)}
+li:last-child{border-bottom:0}
+.n{color:var(--sub);font-size:.85rem;min-width:1.6em;text-align:right}
+.body{flex:1;min-width:0}
+.body a{color:var(--tx);font-weight:600;text-decoration:none;word-break:break-all;line-height:1.4}
+.body a:hover{color:var(--ac);text-decoration:underline}
+.new{background:var(--ac);color:#fff;font-size:.7rem;padding:1px 7px;border-radius:99px;margin-left:8px;font-weight:500;white-space:nowrap}
+button{font:inherit;cursor:pointer}
+.add{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:600}
+input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.panel{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.panel.on{display:flex}
+.box{background:var(--card);border-radius:16px;padding:22px;width:100%;max-width:440px}
+.box h2{margin:0 0 14px;font-size:1.1rem}
+label{display:block;font-size:.85rem;color:var(--sub);margin:10px 0 4px}
+.act{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.act .c{background:none;border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:9px 14px}
+.err{color:var(--ac);font-size:.85rem;min-height:1.2em;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>♥SYSE 영상 모음♥</h1><div class="sub" id="cnt"></div></div>
+  <button class="add" onclick="openP()">+ 새 영상 추가</button>
+</header>
+<main>
+  <ol id="list"></ol>
+</main>
+
+<div class="panel" id="panel">
+  <div class="box">
+    <h2>새 영상 추가</h2>
+    <label>유튜브 링크</label>
+    <input id="url" placeholder="https://youtu.be/...">
+    <label>제목 (선택)</label>
+    <input id="ti" placeholder="영상 제목">
+    <div class="err" id="err"></div>
+    <div class="act"><button class="c" onclick="closeP()">취소</button><button class="add" onclick="addV()">추가</button></div>
+  </div>
+</div>
+
+<script>
+var VIDEOS=[
+{id:"dmwZbHTFMPE",title:"251115_SYSE♥(1) 식전영상_잘됐으면좋겠다/홍대광"},
+{id:"jVsI4G4BemY",title:"251115_SYSE♥(2) 소개영상_한 페이지가 될 수 있게/데이식스"},
+{id:"2laIp8tbB7A",title:"251115_SYSE♥(3) 축가영상_물론mr/허각"},
+{id:"FcXEbNyHGhE",title:"26-1월 속초고성 가족여행 (소노캄 델피노)"},
+{id:"eqPmiTw3nR4",title:"26-5월 SYSE♥ 10주년 포천 나들이"},
+{id:"ycK4_ipiSzg",title:"26-6월 태안해양치유센터"},
+{id:"GYBlSU-BCVY",title:"26-8월 여름휴가 부탁해! 가족 동해&삼척 여행"},
+{id:"L1q-ChryS-U",title:"26-10월 2박 3일 양양쏠비치 & 천안 친척모임 (어린시절 영상 포함)"}
+];
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var KEY="yt-home-extra-v1",extra=[];
+try{var sv=localStorage.getItem(KEY);if(sv){var pa=JSON.parse(sv);if(Array.isArray(pa))extra=pa;}}catch(e){}
+function parseId(u){
+  var m=String(u).trim().match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/);
+  if(m)return m[1];
+  return /^[\w-]{11}$/.test(u.trim())?u.trim():null;
+}
+function render(){
+  var all=VIDEOS.concat(extra),t=all.length,h="";
+  for(var i=t-1;i>=0;i--){
+    var v=all[i],link="https://youtu.be/"+v.id;
+    h+='<li><span class="n">'+(i+1)+'</span><div class="body"><a href="'+link+'" target="_blank" rel="noopener">'+esc(v.title||link)+'</a>'+
+    (i===t-1?'<span class="new">최신</span>':'')+'</div></li>';
+  }
+  document.getElementById("list").innerHTML=h;
+  document.getElementById("cnt").textContent="총 "+t+"개의 영상 · 최신순";
+}
+function openP(){document.getElementById("url").value="";document.getElementById("ti").value="";document.getElementById("err").textContent="";document.getElementById("panel").classList.add("on")}
+function closeP(){document.getElementById("panel").classList.remove("on")}
+function addV(){
+  var id=parseId(document.getElementById("url").value);
+  if(!id){document.getElementById("err").textContent="올바른 유튜브 링크를 입력해주세요.";return}
+  extra.push({id:id,title:document.getElementById("ti").value.trim()});
+  try{localStorage.setItem(KEY,JSON.stringify(extra));}catch(e){}
+  render();closeP();
+}
+document.getElementById("panel").addEventListener("click",function(e){if(e.target===this)closeP()});
+render();
+</script>
+</body>
+</html>
